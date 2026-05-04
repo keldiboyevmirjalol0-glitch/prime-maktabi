@@ -51,6 +51,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
 </style>
 </head>
 <body>
+<!-- Telegram WebApp SDK -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <div class="wrap">
 <div class="hero">
   <div class="hero-dots"></div>
@@ -129,13 +131,21 @@ body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:
 </div>
 </div>
 <script>
+// Telegram WebApp ni yuklash
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
 const T={"Toshkent shahri":["Yunusobod","Chilonzor","Mirobod","Shayxontohur","Olmazor","Bektemir","Yakkasaroy","Uchtepa","Sergeli","Yashnobod","Mirzo Ulug'bek"],"Toshkent viloyati":["Zangiota","Qibray","Bo'ka","Ohangaron","Oqqo'rg'on","Parkent","Piskent","O'rtachirchiq","Yuqorichirchiq","Quyichirchiq","Bo'stonliq","Toshkent tumani","Yangiyul","Chinoz","Iskandar"],"Samarqand viloyati":["Samarqand tumani","Urgut","Kattaqo'rg'on","Bulungur","Ishtixon","Jomboy","Narpay","Nurobod","Oqdaryo","Paxtachi","Payariq","Pastdarg'om","Qo'shrabot","Toyloq"],"Farg'ona viloyati":["Farg'ona tumani","Marg'ilon","Qo'qon","Oltiariq","Bag'dod","Beshariq","Buvayda","Dang'ara","Furqat","Qo'shtepa","Rishton","O'zbekiston tumani","Yozyovon","Uchko'prik","Toshloq"],"Andijon viloyati":["Andijon tumani","Asaka","Baliqchi","Bo'z","Buloqboshi","Jalaquduq","Izboskan","Qo'rg'ontepa","Marhamat","Oltinko'l","Paxtaobod","Shahrixon","Ulug'nor","Ho'jaobod"],"Namangan viloyati":["Namangan tumani","Chust","Pop","To'raqo'rg'on","Chortoq","Kosonsoy","Mingbuloq","Norin","Uychi","Yangiqo'rg'on"],"Buxoro viloyati":["Buxoro tumani","G'ijduvon","Jondor","Kogon","Qorako'l","Qorovulbozor","Olot","Peshku","Romitan","Shofirkon","Vobkent"],"Xorazm viloyati":["Urganch tumani","Xiva","Bog'ot","Gurlan","Xonqa","Qo'shko'pir","Shovot","Tuproqqal'a","Yang'ariq","Yangibozor"],"Qashqadaryo viloyati":["Qarshi tumani","Shahrisabz","G'uzor","Chiroqchi","Dehqonobod","Kasbi","Kitob","Koson","Mirishkor","Muborak","Nishon","Qamashi","Yakkabog'"],"Surxondaryo viloyati":["Termiz tumani","Angor","Bandixon","Denov","Jarqo'rg'on","Muzrabot","Oltinsoy","Qiziriq","Qumqo'rg'on","Sariosiyo","Sherobod","Sho'rchi","Uzun"],"Jizzax viloyati":["Jizzax tumani","G'allaorol","Arnasoy","Baxmal","Do'stlik","Forish","Mirzacho'l","Paxtakor","Sharof Rashidov","Yangiobod","Zafarobod","Zomin"],"Sirdaryo viloyati":["Guliston tumani","Boyovut","Hovos","Mirzaobod","Oqoltin","Sardoba","Sayxunobod","Sirdaryo tumani","Yangiyer tumani"],"Navoiy viloyati":["Navoiy tumani","Zarafshon","Karmana","Konimex","Navbahor","Nurota","Qiziltepa","Tomdi","Uchquduq","Xatirchi"],"Qoraqalpog'iston Respublikasi":["Nukus tumani","Amudaryo","Beruniy","Chimboy","Ellikkala","Kegeyli","Mo'ynoq","Qanliko'l","Qo'ng'irot","Shumanay","Taxtako'pir","To'rtko'l","Xo'jayli"]};
 function loadTumanlar(){
   const vl=document.getElementById('viloyat').value,t=document.getElementById('tuman');
   t.innerHTML='<option value="">Tumanni tanlang</option>';
   if(vl&&T[vl])T[vl].forEach(d=>{const o=document.createElement('option');o.textContent=d;t.appendChild(o)});
 }
-const params=new URLSearchParams(window.location.search),uid=params.get('user_id')||'';
+
+// User ID ni Telegram WebApp dan olish
+const userId = tg.initDataUnsafe?.user?.id || '';
+
 function g(id){return document.getElementById(id).value.trim()}
 async function doSubmit(){
   const fio=g('fio'),phone=g('phone'),passport=g('passport'),viloyat=g('viloyat'),tuman=g('tuman'),maktab=g('maktab'),sinf=g('sinf'),fan1=g('fan1'),teacher=g('teacher');
@@ -145,12 +155,39 @@ async function doSubmit(){
   }
   err.style.display='none';
   const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='⏳ Yuborilmoqda...';
+  
+  // Telegram WebApp orqali botga yuborish
+  const data = {
+    user_id: userId,
+    fio,
+    phone,
+    passport,
+    tuman,
+    maktab,
+    sinf,
+    fan1,
+    fan2: g('fan2'),
+    teacher
+  };
+  
   try{
-    const r=await fetch('register.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:uid,fio,phone,passport,viloyat,tuman,maktab,sinf,fan1,fan2:g('fan2'),teacher})});
-    const res=await r.json();
-    if(res.ok){document.getElementById('form-wrap').style.display='none';document.getElementById('successScreen').style.display='block';}
-    else{err.textContent='⚠️ '+(res.msg||'Xato yuz berdi.');err.style.display='block';btn.disabled=false;btn.textContent="🏅 Ro'yxatdan o'tish";}
-  }catch(e){document.getElementById('form-wrap').style.display='none';document.getElementById('successScreen').style.display='block';}
+    // WebApp data ni Telegram botga yuborish
+    tg.sendData(JSON.stringify(data));
+    
+    // Success ekranni ko'rsatish
+    document.getElementById('form-wrap').style.display='none';
+    document.getElementById('successScreen').style.display='block';
+    
+    // 2 soniyadan keyin WebApp ni yopish
+    setTimeout(() => {
+      tg.close();
+    }, 2000);
+  }catch(e){
+    err.textContent='⚠️ Xato yuz berdi: ' + e.message;
+    err.style.display='block';
+    btn.disabled=false;
+    btn.textContent="🏅 Ro'yxatdan o'tish";
+  }
 }
 </script>
 </body>
